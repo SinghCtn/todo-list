@@ -3,7 +3,7 @@ import React, { ReactNode, useState } from "react";
 
 type taskType = {
   _id: number | string | null;
-  task: string;
+  todoTask: string;
   done: boolean;
 };
 
@@ -12,7 +12,7 @@ export default function Page() {
 
   const [task, setTask] = useState<taskType>({
     _id: null,
-    task: "",
+    todoTask: "",
     done: false,
   });
 
@@ -48,8 +48,9 @@ function Header() {
 function AddTask({ items, task, setTask }: any) {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    items.push(task);
-    setTask({ _id: null, task: "", done: false });
+    const trimedTask = { ...task, todoTask: task.todoTask.trim() };
+    if (trimedTask.todoTask !== "") items.push(trimedTask);
+    setTask({ _id: null, todoTask: "", done: false });
   };
 
   const handleChange = (e: any) => {
@@ -71,9 +72,9 @@ function AddTask({ items, task, setTask }: any) {
           type="text"
           placeholder="Task*"
           className="bg-transparent border border-white rounded-xl p-3 mx-4 focus:outline-none w-80"
-          name="task"
+          name="todoTask"
           onChange={handleChange}
-          value={task.task}
+          value={task.todoTask}
         />
         <button className="bg-transparent border border-white rounded-xl p-3 mx-4 focus:outline-none">
           Add Item
@@ -110,9 +111,9 @@ function TaskList({ items, task, setTask, setItems }: any) {
             <span
               className={`inline-block w-44 px-2 ${
                 item.done ? "line-through decoration-red-700 decoration-4 " : ""
-              }`}
+              }truncate`}
             >
-              {item.task}
+              {item.todoTask}
             </span>
             <button
               className="text-red-600 text-4xl"
