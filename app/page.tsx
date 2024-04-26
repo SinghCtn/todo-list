@@ -1,5 +1,7 @@
 "use client";
 import React, { ReactNode, useState } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 type taskType = {
   _id: number | string | null;
@@ -46,11 +48,19 @@ function Header() {
 }
 
 function AddTask({ items, task, setTask }: any) {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimedTask = { ...task, todoTask: task.todoTask.trim() };
-    if (trimedTask.todoTask !== "") items.push(trimedTask);
-    setTask({ _id: null, todoTask: "", done: false });
+    if (trimedTask.todoTask !== "") {
+      try {
+        const response = axios.post("/api/todo", trimedTask);
+        console.log(response);
+      } catch (error: any) {
+        console.log(error.message);
+        toast.error(error.message);
+      }
+    }
+    setTask({ id: null, todoTask: "", done: false });
   };
 
   const handleChange = (e: any) => {
