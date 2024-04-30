@@ -1,5 +1,5 @@
 "use client";
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -18,6 +18,26 @@ export default function Page() {
     done: false,
   });
 
+  const handleDeleteTask = async (id: any) => {
+    await axios.delete(`/api/todo/${id}`);
+
+    const response = await axios.get("/api/todo");
+    setItems(response.data.tasks);
+  };
+
+  const onToggleItem = async (id: any, done: boolean) => {
+    const request = await axios.patch(`/api/todo/${id}`, { done: done });
+    console.log(request);
+    const response = await axios.get("/api/todo");
+    setItems(response.data.tasks);
+
+    // setItems((prevItems: any) =>
+    //   prevItems.map((item: any) =>
+    //     item._id === id ? { ...item, done: !item.done } : item
+    //   )
+    // );
+  };
+
   return (
     <div className="flex flex-col justify-center items-center bg-gradient-to-t from-black via-pink-500 to-purple-400">
       <Header />
@@ -32,6 +52,8 @@ export default function Page() {
         setItems={setItems}
         task={task}
         setTask={setTask}
+        handleDeleteTask={handleDeleteTask}
+        onToggleItem={onToggleItem}
       />
       <Sorting />
       <Footer />
@@ -47,14 +69,31 @@ function Header() {
   );
 }
 
-function AddTask({ items, task, setTask }: any) {
+function AddTask({ items, task, setTask, setItems }: any) {
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await axios.get("/api/todo");
+        setItems(response.data.tasks);
+      } catch (error: any) {
+        console.log(error.message);
+        toast.error(error.message);
+      }
+    };
+    fetchTasks();
+  }, [setItems]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimedTask = { ...task, todoTask: task.todoTask.trim() };
+
     if (trimedTask.todoTask !== "") {
       try {
-        const response = axios.post("/api/todo", trimedTask);
-        console.log(response);
+        await axios.post("/api/todo", trimedTask);
+
+        const response = await axios.get("/api/todo");
+
+        setItems(response.data.tasks);
       } catch (error: any) {
         console.log(error.message);
         toast.error(error.message);
@@ -74,6 +113,7 @@ function AddTask({ items, task, setTask }: any) {
   return (
     <>
       <h1 className="text-4xl m-10">Add the Tasks to the list:</h1>
+
       <form
         className="text-2xl flex justify-center items-center w-full"
         onSubmit={handleSubmit}
@@ -86,6 +126,7 @@ function AddTask({ items, task, setTask }: any) {
           onChange={handleChange}
           value={task.todoTask}
         />
+
         <button className="bg-transparent border border-white rounded-xl p-3 mx-4 focus:outline-none">
           Add Item
         </button>
@@ -94,19 +135,7 @@ function AddTask({ items, task, setTask }: any) {
   );
 }
 
-function TaskList({ items, task, setTask, setItems }: any) {
-  const onToggleItem = (id: any) => {
-    setItems((prevItems: any) =>
-      prevItems.map((item: any) =>
-        item._id === id ? { ...item, done: !item.done } : item
-      )
-    );
-  };
-
-  const handleDeleteTask = (id: any) => {
-    setItems((prev: any) => prev.filter((item: any) => item._id !== id));
-  };
-
+function TaskList({ items, setItems, handleDeleteTask, onToggleItem }: any) {
   return (
     <div className="bg-[#1a1a1a]/20 backdrop-opacity-10 m-10 w-[80%] h-[50vh]">
       <ul className="overflow-auto h-full w-full m-auto grid auto-rows-max grid-cols-3 gap-4 justify-items-center ">
@@ -115,7 +144,7 @@ function TaskList({ items, task, setTask, setItems }: any) {
             <input
               type="checkbox"
               checked={item.done}
-              onChange={() => onToggleItem(item._id)}
+              onChange={(e) => onToggleItem(item._id, e.target.checked)}
               className="h-5 w-5"
             />
             <span

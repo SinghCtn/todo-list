@@ -7,7 +7,6 @@ connect();
 export async function POST(request: NextRequest) {
   try {
     const reqBody = await request.json();
-
     const { todoTask } = reqBody;
     console.log(reqBody);
 
@@ -32,6 +31,15 @@ export async function POST(request: NextRequest) {
       success: true,
       savedTask,
     });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  try {
+    const tasks = await Todo.find({});
+    return NextResponse.json({ message: "success", tasks });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
